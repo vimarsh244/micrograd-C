@@ -30,7 +30,7 @@ void print_value(Value* v){
 }
 
 // store multiple values together
-void store__multiple_values(float* arr){
+Value** store__multiple_values(float* arr){
     int len = sizeof(arr)/sizeof(arr[0]);
 
     //malloc
