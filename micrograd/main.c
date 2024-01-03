@@ -25,6 +25,13 @@ printf("d (slope) = %f\n", d);
 
   Value *w1 = store_value(2.0);
   print_value(w1);
+
+  Value *w2 = store_value(-3.0);
+  Value* sum = add(w1, w2);
+  Value* mul_result = mul(w1, w2);
+  
+  print_value(sum);
+  print_value(mul_result);
   
   return 0;
 }

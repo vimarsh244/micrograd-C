@@ -12,6 +12,14 @@ typedef struct Value{
 
 } Value;
 
+void back_add(Value* v);
+void back_sub(Value* v);
+void back_mul(Value* v);
+void back_div(Value* v);
+void back_power(Value* v);
+void back_relu(Value* v);
+
+
 // Initializizing a value
 Value* store_value(float data){
     Value* v = (Value*) malloc(sizeof(Value));
@@ -91,7 +99,7 @@ Value* mul(Value* a, Value* b){
     return v;
 }
 
-Value* div(Value* a, Value* b){
+Value* divide(Value* a, Value* b){
     Value* v = (Value*) malloc(sizeof(Value));
     v->data = a->data / b->data;
     v->grad = 0.0;
@@ -192,3 +200,4 @@ void back_relu(Value* v){
         v->children[0]->grad += 0;
     
 }
+
