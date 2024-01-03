@@ -23,9 +23,8 @@ float d2 = a*b +c;
 float d = (d2-d1)/h;
 printf("d (slope) = %f\n", d);
 
-  // Value* value1(10.0);
-
-  print_value(value1);
+  Value *w1 = store_value(2.0);
+  print_value(w1);
   
   return 0;
 }
