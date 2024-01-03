@@ -12,6 +12,7 @@ typedef struct Value{
 
 } Value;
 
+
 void back_add(Value* v);
 void back_sub(Value* v);
 void back_mul(Value* v);
@@ -33,7 +34,7 @@ Value* store_value(float data){
 
 
 void print_value(Value* v){
-    printf("Value: %f\n", v->data);
+    printf("Value: %f\t", v->data);
     printf("Gradient: %f\n", v->grad);
 }
 
@@ -198,6 +199,18 @@ void back_relu(Value* v){
         v->children[0]->grad += v->grad;
     else 
         v->children[0]->grad += 0;
+    
+}
+
+
+void backward(Value* root_v){
+    // need to watch video cant do it on my own
+    float h = 0.00001;
+    // We know dL/dd => but we need to find dL/da, dL/db, dL/dc
+    // by product rule we know
+    // dL/da = dL/dd * dd/da
+    
+
     
 }
 
