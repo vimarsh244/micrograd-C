@@ -188,7 +188,8 @@ void back_div(Value* v){
 // dy/du = v*u^(v-1)
 // dy/dv = u^v * log(u)
 void back_power(Value* v){
-    v->children[0]->grad += v->grad * v->children[1]->data * pow(v->children[0]->data, v->children[1]->data - 1);
+
+    v->children[0]->grad += v->grad * v->children[1]->data * pow(v->children[0]->data, v->children[1]->data - 1.0);
     if(v->children[0]->data > 0)
         v->children[1]->grad += v->grad * pow(v->children[0]->data, v->children[1]->data) * log(v->children[0]->data);
 }
@@ -202,6 +203,33 @@ void back_relu(Value* v){
     
 }
 
+void build_map(Value* v, Value** map, int* map_size, Value** visited, int* visited_size){
+    // if v is already in visited, return
+    for(int i=0; i<*visited_size; i++){
+        if(v == visited[i])
+            return;
+    }
+
+    // if v is not in visited, add it to visited
+    visited[*visited_size] = v;
+    *visited_size += 1;
+
+    // if v is a leaf node, add it to map
+    // if(v->prev == 0){
+    //     map[*map_size] = v;
+    //     *map_size += 1;
+    //     return;
+    // }
+
+    // if v is not a leaf node, build map for all children
+    for(int i=0; i<v->prev; i++){
+        build_map(v->children[i], map, map_size, visited, visited_size);
+    }
+
+    // add v to map => it should be leaf node if it arrives here
+    map[*map_size] = v;
+    *map_size += 1;
+}
 
 void backward(Value* root_v){
     // need to watch video cant do it on my own
@@ -209,8 +237,32 @@ void backward(Value* root_v){
     // We know dL/dd => but we need to find dL/da, dL/db, dL/dc
     // by product rule we know
     // dL/da = dL/dd * dd/da
-    
 
+    Value* map[100]; //sufficient ig
+    int map_size = 0;
+    Value* visited[100];
+    int visited_size = 0;
+
+    build_map(root_v, map, &map_size, visited, &visited_size);
+
+    printf("map size: %d\n",map_size);
+
+    root_v->grad = 1.0;
+
+    for(int i = map_size-1; i>=0; i--){
+        // Value* v = map[i];
+        // if(v->backward != NULL)
+        //     printf("map %d value: %f\n", i, v->data);
+        //     v->backward(v);
+
+         if (map[i]->backward) {
+            printf("map %d value: %f\n", i, map[i]->data);
+            
+            map[i]->backward(map[i]);
+
+            
+        }
+    }   
     
 }
 
