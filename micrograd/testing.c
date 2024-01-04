@@ -19,15 +19,25 @@ int main() {
     print_value(v2);
 
 
-    Value* v3 = store_value(3.0);
-    Value* v4 = store_value(4.0);
-    Value* res = sub(mul(add(v3, v4), v4), v3);
+    Value* v3 = store_value(3.0); // u
+    Value* v4 = store_value(4.0); //v
+    Value* res = sub(power(add(v3, v4), v4), v3); // (u+v)^v - u
     Value* res2 = relu(sub(v3, v4));
     Value* res3 = divide(v3, v4);
 
-    // backward(res);
-    print_value(res2);
-    backward(res2);
+    //dres/du
+    // v*(u+v)^(v-1) - 1
+    // dres/dv
+    // u*(u+v)^(v-1) + (u+v)^v*log(u+v) - u
+
+    float u = 3.0, v = 4.0;
+    printf("value of dres/du: %f\n", v*pow(u+v, v-1) - 1.0);
+    printf("value of dres/dv: %f\n", u*pow(u+v, v-1) + pow(u+v, v)*log(u+v) - u);
+    printf("res->value: %f\n", res->data);
+
+    backward(res);
+    print_value(res);
+    // backward(res2);
     print_value(v3);
     print_value(v4);
 
