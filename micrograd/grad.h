@@ -343,4 +343,32 @@ Value* def_log(Value* v){
 Value* def_sigmoid(Value* v){}
 //todo
 
-Value* def_softmax(Value* v){}
+void back_softmax(Value* v){
+    // softmax = e^x / sum(e^x)
+    // dsoftmax/dx = e^x * (sum(e^x) - e^x) / (sum(e^x))^2
+    Value* v_exp = exponentiate(v);
+    Value* sum_exp = store_value(0.0);
+    for(int i=0; i<v->prev; i++){
+        sum_exp->data += v_exp->data;
+    }
+    v->children[0]->grad += v->grad * (v_exp->data * (sum_exp->data - v_exp->data) / pow(sum_exp->data, 2));
+}
+
+Value* def_softmax(Value* v){
+    // softmax = e^x / sum(e^x)
+    // dsoftmax/dx = e^x * (sum(e^x) - e^x) / (sum(e^x))^2
+
+    Value* out = (Value*) malloc(sizeof(Value));
+    Value* v_exp = exponentiate(v);
+    Value* sum_exp = store_value(0.0);
+    for(int i=0; i<v->prev; i++){
+        sum_exp->data += v_exp->data;
+    }
+    out->data = divide(v_exp, sum_exp)->data;
+    out->grad = 0.0;
+    out->children = (Value**) malloc(sizeof(Value*));
+    out->children[0] = v;
+    out->prev = 1;
+    out->backward = back_softmax;
+    return out;
+}

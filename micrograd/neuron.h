@@ -22,6 +22,7 @@ apply activation at neuron level or layer level?
 ... Layer N
 */
 
+void show_params();
 
 
 typedef enum {
@@ -55,7 +56,7 @@ Neuron* initialize_Neuron(int input_size, act_fn activation_function){
         // i want to generate values between -1 and 1 how to do it:
         n->weights[i] = store_value(((float)rand()/(float)(RAND_MAX)) * 2.0 - 1.0); // it was generating same random valuesss whyyyy = we seed it
 
-        printf("%f\n", n->weights[i]->data);
+        // printf("%f\n", n->weights[i]->data);
     }
     n->bias = store_value(0.0);
     return n;
@@ -90,6 +91,7 @@ Value* forward_pass_Neuron(Neuron* n, Value** inputs){
         // sum = summation over i (w_i * x_i)
     }
     sum = add(sum, n->bias); // adding bias term
+    // printf("activation function: %d\n", n->activation_function);
     sum = activation_output(sum, n->activation_function);
     //change of plans: activation function after a layer not after a neuron
 
@@ -100,13 +102,14 @@ Value* forward_pass_Neuron(Neuron* n, Value** inputs){
 
 typedef struct Layer{
     Neuron** neurons;
-    int input_size; 
+    // int input_size; 
     int output_size;
 } Layer;
 
 Layer* inititalize_Layer(int input_size, int output_size, act_fn activation_function){
     Layer* l = (Layer*) malloc(sizeof(Layer));
-    l->input_size = input_size;
+    // l->input_size = input_size;
+    printf("input size: %d | output size: %d\n", input_size, output_size);
     l->output_size = output_size;
     l->neurons = (Neuron**) malloc(output_size*sizeof(Neuron*));
     for(int i = 0; i< output_size; i++){
@@ -131,32 +134,69 @@ typedef struct{
 } MLP;
 
 // sizes = [2,3,2] | num_layers = 3
-MLP* initialize_MLP(int* sizes, int num_layers, act_fn activation_function){
+MLP* initialize_old_MLP(int* sizes, int num_layers){
     MLP* mlp = (MLP*) malloc(sizeof(MLP));
-    mlp->num_layers = num_layers;
-    mlp->layers = (Layer**) malloc(num_layers*sizeof(Layer*));
-    for(int i = 0; i< num_layers-1; i++){
+    mlp->num_layers = num_layers -1; // not -1 : so implement accordingly 
+    // printf("number of layers: %d\n", num_layers);   
+    mlp->layers = (Layer**) malloc((num_layers-1)*sizeof(Layer*));
+    for(int i = 0; i< num_layers - 1; i++){
         mlp->layers[i] = inititalize_Layer(sizes[i], sizes[i+1], NO);
+        printf("%d\n", i);
     }
+    act_fn activation_function = SOFTMAX;
+    // printf("activatassadaion function: %d\n", activation_function);
+    // printf("reached here\n");
     mlp->layers[num_layers-1] = inititalize_Layer(sizes[num_layers-1], 1, activation_function); // last layer has an activation function
+    // printf("can u reach here\n");
+    // show_params(mlp);
+    return mlp;
+}
+
+MLP* initialize_MLP(int* sizes, int nlayers) {
+    MLP* mlp = (MLP*)malloc(sizeof(MLP));
+    mlp->layers = (Layer**)malloc((nlayers - 1) * sizeof(Layer*));
+    for (int i = 0; i < nlayers - 1; i++) {
+        int av= RELU;
+        if(i != nlayers - 2)
+            av = NO;  // nonlinearity for all layers except the last one
+
+        mlp->layers[i] = inititalize_Layer(sizes[i], sizes[i+1], av);
+    }
+    mlp->num_layers = nlayers - 1;
     return mlp;
 }
 
 
+
+// Value** forward_pass_MLP(MLP* mlp, Value** inputs){
+//     // printf("reached here\n");
+//     Value** outputs = (Value**) malloc(mlp->num_layers*sizeof(Value*));
+//     for(int i = 0; i< mlp->num_layers; i++){
+//         outputs = forward_pass_Layer(mlp->layers[i], inputs);
+//         // printf("reached here\n");
+//     }
+//     return outputs;
+// }
+
 Value** forward_pass_MLP(MLP* mlp, Value** inputs){
     Value** outputs = (Value**) malloc(mlp->num_layers*sizeof(Value*));
-    for(int i = 0; i< mlp->num_layers; i++){
-        outputs = forward_pass_Layer(mlp->layers[i], inputs);
+    // printf("mlp num layers: %d\n", mlp->num_layers);
+    outputs = forward_pass_Layer(mlp->layers[0], inputs);
+    for(int i = 1; i< mlp->num_layers; i++){
+        Value** temp = forward_pass_Layer(mlp->layers[i], outputs);
+        if(i > 0) free(outputs); // Free the previous outputs
+        outputs = temp;
     }
     return outputs;
 }
 
-Value* MSE_LOSS(Value** y_predicted, Value** y_true, int size){
+Value* mse_loss(Value** y_predicted, Value** y_true, int size){
     Value* loss = store_value(0.0);
     for(int i = 0; i< size; i++){
         loss = add(loss, power(sub(y_predicted[i], y_true[i]), store_value(2.0)));
     }
     loss = divide(loss, store_value(size));
+    // print_value(loss);
     return loss;
 }
 
@@ -217,4 +257,27 @@ void free_MLP(MLP* mlp){
     }
     free(mlp->layers);
     free(mlp);
+}
+
+
+Value* train_mlp(MLP* mlp, Value** x, Value** y_actual, float learning_rate){
+    Value** y_predicted = forward_pass_MLP(mlp, x);
+    print_value(y_predicted[0]);
+
+    // printf("mlp->layers[mlp->num_layers-1]->output_size: %d\n", mlp->layers[mlp->num_layers-1]->output_size);
+    Value* loss = mse_loss(y_predicted, y_actual, mlp->layers[mlp->num_layers-1]->output_size);
+    printf("loss: %f\n", loss->data);
+    backward(loss);
+    for(int i = 0; i< mlp->num_layers; i++){
+        Layer* layer = mlp->layers[i];
+        for(int j = 0; j< layer->output_size; j++){
+            Neuron* neuron = layer->neurons[j];            
+            update_weights(neuron->bias, learning_rate);
+            for(int k = 0; k< neuron->input_size; k++){
+                update_weights(neuron->weights[k], learning_rate);
+            }
+        }
+    }
+    return loss;
+    free(y_predicted);
 }
