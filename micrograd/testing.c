@@ -21,10 +21,17 @@ int main() {
 
     Value* v3 = store_value(3.0); // u
     Value* v4 = store_value(4.0); //v
-    Value* res3 = sub(mul(add(v3, v4), v4), v3); // (u+v)*v - u
+    // Value* res3 = sub(mul(add(v3, v4), v4), v3); // (u+v)*v - u
     // Value* res2 = relu(sub(v3, v4));
     // Value* res3 = power(v3, v4);
 
+    // Value* v_tan_test = store_value(-4);
+
+    // Value* res3 = def_tanh(v_tan_test);
+    // backward(res3);
+
+    // print_value(res3);
+    // print_value(v_tan_test);
     //dres/du
     // v -1
     //dres/dv
@@ -46,6 +53,9 @@ int main() {
     // dy/dv = u^v * ln(u)
     // printf("dres/du: %f\n", v*pow(u, v-1));
     // printf("dres/dv: %f\n", pow(u, v)*log(u));
+
+    Value* res3 = add(v3, v3);
+
     backward(res3);
     print_value(res3);
     print_value(v3);

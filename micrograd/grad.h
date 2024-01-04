@@ -144,6 +144,10 @@ Value* relu(Value* a){
 void free_value(Value* v){
     
     if(v->prev > 0)
+        
+        for(int i=0; i<v->prev; i++){
+            free_value(v->children[i]);
+        }
         free(v->children);
     
     free(v);
@@ -214,7 +218,9 @@ void back_relu(Value* v){
     
 }
 
+// topological sort
 void build_map(Value* v, Value** map, int* map_size, Value** visited, int* visited_size){
+
     // if v is already in visited, return
     for(int i=0; i<*visited_size; i++){
         if(v == visited[i])
@@ -243,6 +249,13 @@ void build_map(Value* v, Value** map, int* map_size, Value** visited, int* visit
 }
 
 void backward(Value* root_v){
+
+    //...
+    // that bug was in cases where a node was used more than once,
+    // if a variable is used more than once it causes errors
+    // to fix it: we basically accumulate these gradients which explains it 
+    // https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)/14%3A_Differentiation_of_Functions_of_Several_Variables/14.05%3A_The_Chain_Rule_for_Multivariable_Functions
+
     // need to watch video cant do it on my own
     float h = 0.00001;
     // We know dL/dd => but we need to find dL/da, dL/db, dL/dc
@@ -278,3 +291,56 @@ void backward(Value* root_v){
     
 }
 
+void back_exponentiate(Value* v){
+    v->children[0]->grad += v->grad * exp(v->children[0]->data);
+}
+
+Value* exponentiate(Value* v){
+    Value* res = (Value*) malloc(sizeof(Value));
+    res->data = exp(v->data);
+    res->grad = 0.0;
+    res->children = (Value**) malloc(sizeof(Value*));
+    res->children[0] = v;
+    res->prev = 1;
+    res -> backward = back_exponentiate;
+    return res;
+}
+
+// d/dx tanh(x) = 1 - tanh(x)^2
+void back_tanh(Value* v){
+    v->children[0]->grad += v->grad * (1 - pow(tanh(v->children[0]->data), 2));
+}
+
+Value* def_tanh(Value* v){
+    Value* out = (Value*) malloc(sizeof(Value));
+    Value* v_neg_exp = store_value(-v->data);
+    
+    out->data = divide(sub(exponentiate(v),exponentiate(v_neg_exp)), add(exponentiate(v), exponentiate(v_neg_exp)))->data;
+    out->grad = 0.0;
+    out->children = (Value**) malloc(sizeof(Value*));
+    out->children[0] = v;
+    out->prev = 1;
+    out->backward = back_tanh;
+    free_value(v_neg_exp);
+    return out;   
+}
+
+void back_log(Value* v){
+    v->children[0]->grad += v->grad * (1/v->children[0]->data);
+}
+
+Value* def_log(Value* v){
+    Value* out = (Value*) malloc(sizeof(Value));
+    out->data = log(v->data);
+    out->grad = 0.0;
+    out->children = (Value**) malloc(sizeof(Value*));
+    out->children[0] = v;
+    out->prev = 1;
+    out->backward = back_log;
+    return out;
+}
+
+Value* def_sigmoid(Value* v){}
+//todo
+
+Value* def_softmax(Value* v){}
