@@ -22,11 +22,11 @@ int main() {
     Value* v3 = store_value(3.0);
     Value* v4 = store_value(4.0);
     Value* res = sub(mul(add(v3, v4), v4), v3);
-    Value* res2 = add(v3, v4);
-    Value* res3 = sub(v3, v4);
+    Value* res2 = relu(sub(v3, v4));
+    Value* res3 = divide(v3, v4);
 
     // backward(res);
-    print_value(res);
+    print_value(res2);
     backward(res2);
     print_value(v3);
     print_value(v4);
