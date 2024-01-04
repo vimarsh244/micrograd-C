@@ -172,23 +172,27 @@ void back_sub(Value* v){
 // dy/du = v
 // so below:
 void back_mul(Value* v){
-    printf("v->grad: %f\n", v->grad);
-    printf("v->children[0]->grad: %f\n", v->children[0]->grad);
-    printf("v->children[1]->grad: %f\n", v->children[1]->grad);
+    // printf("v->grad: %f\n", v->grad);
+    // printf("v->children[0]->grad: %f\n", v->children[0]->grad);
+    // printf("v->children[1]->grad: %f\n", v->children[1]->grad);
 
-    v->children[0]->grad *= v->grad * v->children[1]->data;
-    v->children[1]->grad *= v->grad * v->children[0]->data;
+    // for single operation * is giving correct value, for multiple + is 
+    // it was correct only i think just giving some pointers related issue cause multiple referencing of same value
 
-    printf("v->children[1]->grad: %f\n", v->children[1]->grad);
-    printf("v->children[0]->grad: %f\n", v->children[0]->grad);
+
+    v->children[0]->grad += v->grad * v->children[1]->data;
+    v->children[1]->grad += v->grad * v->children[0]->data;
+
+    // printf("v->children[1]->grad: %f\n", v->children[1]->grad);
+    // printf("v->children[0]->grad: %f\n", v->children[0]->grad);
 }
 
 //if y = (u_grad_prev, v_grad_prev => we take this into account) u/v
 // dy/du = 1/v
 // dy/dv = -u/v^2
 void back_div(Value* v){
-    v->children[0]->grad *= v->grad / v->children[1]->data;
-    v->children[1]->grad *= v->grad * (v->children[0]->data) / pow(v->children[1]->data, 2);
+    v->children[0]->grad += v->grad / v->children[1]->data;
+    v->children[1]->grad -= v->grad * (v->children[0]->data) / pow(v->children[1]->data, 2);
 }
 
 // y = u^v
@@ -196,9 +200,9 @@ void back_div(Value* v){
 // dy/dv = u^v * log(u)
 void back_power(Value* v){
 
-    v->children[0]->grad *= v->grad * v->children[1]->data * pow(v->children[0]->data, v->children[1]->data - 1.0);
+    v->children[0]->grad += v->grad * v->children[1]->data * pow(v->children[0]->data, v->children[1]->data - 1.0);
     if(v->children[0]->data > 0)
-        v->children[1]->grad *= -v->grad * pow(v->children[0]->data, v->children[1]->data) * log(v->children[0]->data);
+        v->children[1]->grad += v->grad * pow(v->children[0]->data, v->children[1]->data) * log(v->children[0]->data);
 }
 
 
@@ -252,8 +256,8 @@ void backward(Value* root_v){
 
     build_map(root_v, map, &map_size, visited, &visited_size);
 
-    printf("map size: %d\n",map_size);
-    printf("visited size: %d\n",visited_size);
+    // printf("map size: %d\n",map_size);
+    // printf("visited size: %d\n",visited_size);
 
     root_v->grad = 1.0;
 
@@ -264,7 +268,7 @@ void backward(Value* root_v){
         //     v->backward(v);
 
          if (map[i]->backward) {
-            printf("map %d value: %f\n", i, map[i]->data);
+            // printf("map %d value: %f\n", i, map[i]->data);
             
             map[i]->backward(map[i]);
 
