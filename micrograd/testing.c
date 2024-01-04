@@ -1,9 +1,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "grad.h"
+// #include "grad.h"
+#include "neuron.h"
 
-int main() {
+int main()
+{
+    
+    srand(time(0)); 
+
+    
+    Neuron* n = initialize_Neuron(3, NO);
+    print_value(n->weights[0]);
+    print_value(n->weights[1]);
+    print_value(n->weights[2]);
+    print_value(n->bias);
+    return 0;
+}
+
+int main_forbackward() {
     // Initialize the values
     Value* v1 = store_value(3.0);
     Value* v2 = store_value(2.5);

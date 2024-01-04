@@ -1,17 +1,36 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "grad.h"
+#include "grad.h" // dont do this
+
+#include <time.h> // for seeding random number generator
+
+
+/*
+Need to think to know how to structure it
+
+What kind of NN I want?
+
+1 Neuron:
+ - n inputs
+    to w_i*x_i + b
+apply activation at neuron level or layer level?
+
+[
+    Neuron1 Neuron2 Neuron3 ...
+] Layer 1
+... Layer N
+*/
 
 
 
 typedef enum {
-    NONE,
+    NO,
     RELU,
     TANH,
     SIGMOID,
     SOFTMAX
-} activation_function;
+} act_fn;
 
 typedef struct Neuron{
     Value** weights;
@@ -19,18 +38,24 @@ typedef struct Neuron{
     int input_size;
     
     // https://www.geeksforgeeks.org/enumeration-enum-c/ 
-    activation_function activation_function = NONE;
+    
+    act_fn activation_function;
 } Neuron;
 
 
 
-Neuron* initialize_Neuron(int input_size, activation_function activation_function){
+Neuron* initialize_Neuron(int input_size, act_fn activation_function){
     Neuron* n = (Neuron*) malloc(sizeof(Neuron));
     n->input_size = input_size;
     n->activation_function = activation_function;
     n->weights = (Value**) malloc(input_size*sizeof(Value*));
     for(int i = 0; i< input_size; i++){
-        n->weights[i] = store_value(rand()*2 - 1); // random number between -1 and 1
+
+        // n->weights[i] = store_value(rand()*2.0 - 1.0); // THIS IS WRNG random number between -1 and 1
+        // i want to generate values between -1 and 1 how to do it:
+        n->weights[i] = store_value(((float)rand()/(float)(RAND_MAX)) * 2.0 - 1.0); // it was generating same random valuesss whyyyy = we seed it
+
+        printf("%f\n", n->weights[i]->data);
     }
     n->bias = store_value(0.0);
     return n;
@@ -38,9 +63,9 @@ Neuron* initialize_Neuron(int input_size, activation_function activation_functio
 
 
 
-Value* activation_output(Value* v, activation_function activation_function){
+Value* activation_output(Value* v, act_fn activation_function){
     switch (activation_function){
-        case NONE:
+        case NO:
             break;
         case RELU:
             v = relu(v);
@@ -65,7 +90,7 @@ Value* forward_pass_Neuron(Neuron* n, Value** inputs){
         // sum = summation over i (w_i * x_i)
     }
     sum = add(sum, n->bias); // adding bias term
-    // sum = activation_output(sum, n->activation_function);
+    sum = activation_output(sum, n->activation_function);
     //change of plans: activation function after a layer not after a neuron
 
     return sum;
@@ -79,7 +104,7 @@ typedef struct Layer{
     int output_size;
 } Layer;
 
-Layer* inititalize_Layer(int input_size, int output_size, activation_function activation_function){
+Layer* inititalize_Layer(int input_size, int output_size, act_fn activation_function){
     Layer* l = (Layer*) malloc(sizeof(Layer));
     l->input_size = input_size;
     l->output_size = output_size;
@@ -106,12 +131,12 @@ typedef struct{
 } MLP;
 
 // sizes = [2,3,2] | num_layers = 3
-MLP* initialize_MLP(int* sizes, int num_layers, activation_function activation_function){
+MLP* initialize_MLP(int* sizes, int num_layers, act_fn activation_function){
     MLP* mlp = (MLP*) malloc(sizeof(MLP));
     mlp->num_layers = num_layers;
     mlp->layers = (Layer**) malloc(num_layers*sizeof(Layer*));
     for(int i = 0; i< num_layers-1; i++){
-        mlp->layers[i] = inititalize_Layer(sizes[i], sizes[i+1], NONE);
+        mlp->layers[i] = inititalize_Layer(sizes[i], sizes[i+1], NO);
     }
     mlp->layers[num_layers-1] = inititalize_Layer(sizes[num_layers-1], 1, activation_function); // last layer has an activation function
     return mlp;
