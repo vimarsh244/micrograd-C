@@ -56,7 +56,7 @@ Neuron* initialize_Neuron(int input_size, act_fn activation_function){
         // i want to generate values between -1 and 1 how to do it:
         n->weights[i] = store_value(((float)rand()/(float)(RAND_MAX)) * 2.0 - 1.0); // it was generating same random valuesss whyyyy = we seed it
 
-        // printf("%f\n", n->weights[i]->data);
+        printf("%f\n", n->weights[i]->data);
     }
     n->bias = store_value(0.0);
     return n;
@@ -65,28 +65,35 @@ Neuron* initialize_Neuron(int input_size, act_fn activation_function){
 
 
 Value* activation_output(Value* v, act_fn activation_function){
+    // printf("activation function: %d\n", activation_function);
+    Value* out = store_value(0.0);
     switch (activation_function){
         case NO:
+            out = v;
             break;
         case RELU:
-            v = relu(v);
+            out = relu(v);
             break;
         case TANH:
-            v = def_tanh(v);
+            out = def_tanh(v);
             break;
         case SIGMOID:
-            v = def_sigmoid(v);
+            out= def_sigmoid(v);
             break;
         case SOFTMAX:   
-            v = def_softmax(v);
+            out = def_softmax(v);
             break;
     }
-    return v;
+    return out;
 }
 
 Value* forward_pass_Neuron(Neuron* n, Value** inputs){
     Value* sum = store_value(0.0);
     for(int i = 0; i < n->input_size; i++){
+        // Value* prod = mul(n->weights[i], inputs[i]);
+        // sum = add(sum, prod);
+        // // free_value(prod);
+
         sum = add(sum, mul(n->weights[i], inputs[i]));
         // sum = summation over i (w_i * x_i)
     }
@@ -143,7 +150,7 @@ MLP* initialize_old_MLP(int* sizes, int num_layers){
         mlp->layers[i] = inititalize_Layer(sizes[i], sizes[i+1], NO);
         printf("%d\n", i);
     }
-    act_fn activation_function = SOFTMAX;
+    act_fn activation_function = TANH;
     // printf("activatassadaion function: %d\n", activation_function);
     // printf("reached here\n");
     mlp->layers[num_layers-1] = inititalize_Layer(sizes[num_layers-1], 1, activation_function); // last layer has an activation function
@@ -156,7 +163,7 @@ MLP* initialize_MLP(int* sizes, int nlayers) {
     MLP* mlp = (MLP*)malloc(sizeof(MLP));
     mlp->layers = (Layer**)malloc((nlayers - 1) * sizeof(Layer*));
     for (int i = 0; i < nlayers - 1; i++) {
-        int av= RELU;
+        int av= TANH;
         if(i != nlayers - 2)
             av = NO;  // nonlinearity for all layers except the last one
 
@@ -165,7 +172,6 @@ MLP* initialize_MLP(int* sizes, int nlayers) {
     mlp->num_layers = nlayers - 1;
     return mlp;
 }
-
 
 
 // Value** forward_pass_MLP(MLP* mlp, Value** inputs){
@@ -178,21 +184,30 @@ MLP* initialize_MLP(int* sizes, int nlayers) {
 //     return outputs;
 // }
 
-Value** forward_pass_MLP(MLP* mlp, Value** inputs){
-    Value** outputs = (Value**) malloc(mlp->num_layers*sizeof(Value*));
-    // printf("mlp num layers: %d\n", mlp->num_layers);
-    outputs = forward_pass_Layer(mlp->layers[0], inputs);
-    for(int i = 1; i< mlp->num_layers; i++){
-        Value** temp = forward_pass_Layer(mlp->layers[i], outputs);
-        if(i > 0) free(outputs); // Free the previous outputs
-        outputs = temp;
+Value** forward_pass_MLP(MLP* mlp, Value** x) {
+    for (int i = 0; i < mlp->num_layers; i++) {
+        x = forward_pass_Layer(mlp->layers[i], x);
     }
-    return outputs;
+    return x;
 }
+
+// Value** forward_pass_MLP(MLP* mlp, Value** inputs){
+//     Value** outputs = (Value**) malloc(mlp->num_layers*sizeof(Value*));
+//     // printf("mlp num layers: %d\n", mlp->num_layers);
+//     outputs = forward_pass_Layer(mlp->layers[0], inputs);
+//     for(int i = 1; i< mlp->num_layers; i++){
+//         Value** temp = forward_pass_Layer(mlp->layers[i], outputs);
+//         if(i > 0) free(outputs); // Free the previous outputs
+//         outputs = temp;
+//     }
+//     print_value(outputs[0]);
+//     return outputs;
+// }
 
 Value* mse_loss(Value** y_predicted, Value** y_true, int size){
     Value* loss = store_value(0.0);
     for(int i = 0; i< size; i++){
+        // print_value(sub(y_predicted[i], y_true[i])); why is y_predicted turning out to be 0
         loss = add(loss, power(sub(y_predicted[i], y_true[i]), store_value(2.0)));
     }
     loss = divide(loss, store_value(size));
@@ -261,13 +276,14 @@ void free_MLP(MLP* mlp){
 
 
 Value* train_mlp(MLP* mlp, Value** x, Value** y_actual, float learning_rate){
+    // print_value(x[0]);
+    // print_value(y_actual[0]);
     Value** y_predicted = forward_pass_MLP(mlp, x);
-    print_value(y_predicted[0]);
+    // print_value(y_predicted[0]);
 
     // printf("mlp->layers[mlp->num_layers-1]->output_size: %d\n", mlp->layers[mlp->num_layers-1]->output_size);
     Value* loss = mse_loss(y_predicted, y_actual, mlp->layers[mlp->num_layers-1]->output_size);
-    printf("loss: %f\n", loss->data);
-    backward(loss);
+    // printf("loss: %f\n", loss->data);
     for(int i = 0; i< mlp->num_layers; i++){
         Layer* layer = mlp->layers[i];
         for(int j = 0; j< layer->output_size; j++){

@@ -313,15 +313,19 @@ void back_tanh(Value* v){
 
 Value* def_tanh(Value* v){
     Value* out = (Value*) malloc(sizeof(Value));
-    Value* v_neg_exp = store_value(-v->data);
+
+    float data = v->data;
+
+    out-> data = tanh(data);
+    // Value* v_neg_exp = store_value(-v->data);
     
-    out->data = divide(sub(exponentiate(v),exponentiate(v_neg_exp)), add(exponentiate(v), exponentiate(v_neg_exp)))->data;
+    // out->data = divide(sub(exponentiate(v),exponentiate(v_neg_exp)), add(exponentiate(v), exponentiate(v_neg_exp)))->data;
     out->grad = 0.0;
     out->children = (Value**) malloc(sizeof(Value*));
     out->children[0] = v;
     out->prev = 1;
     out->backward = back_tanh;
-    free_value(v_neg_exp);
+    // free_value(v_neg_exp);
     return out;   
 }
 
