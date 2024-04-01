@@ -1,8 +1,8 @@
 ## About 
 
-Trying to implement [micrograd](https://github.com/karpathy/micrograd) [yt](https://youtu.be/VMj-3S1tku0) but in C.
+Trying to implement [micrograd](https://github.com/karpathy/micrograd) [[yt]](https://youtu.be/VMj-3S1tku0) but in C.
 
-Micrograd is a mini implementation for pytorch. Trying to do the implementation in C (instead of python like in original project).
+Micrograd is a mini implementation for pytorch. Trying to do the implementation in C.
 
 ## Usage
 
