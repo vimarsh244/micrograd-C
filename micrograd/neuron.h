@@ -24,7 +24,6 @@ apply activation at neuron level or layer level?
 
 void show_params();
 
-
 typedef enum {
     NO,
     RELU,

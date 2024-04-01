@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-
 typedef struct Value{
     float data; //actual data of value stored
     float grad; // gradient wwrt
@@ -31,7 +30,6 @@ Value* store_value(float data){
     v->backward = NULL;
     return v;
 }
-
 
 void print_value(Value* v){
     printf("Value: %f\t", v->data);

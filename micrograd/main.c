@@ -4,7 +4,6 @@
 
 #include "grad.h"
 
-
 int main(int argc, char **argv) {
   float x = 1.0;
   float y = 2.0;

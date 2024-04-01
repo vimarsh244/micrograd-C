@@ -30,8 +30,8 @@ int main_forbackward() {
     backward(result);
 
     // Print the gradients
-    // print_value(v1);
-    // print_value(v2);
+    print_value(v1);
+    print_value(v2);
 
 
     Value* v3 = store_value(3.0); // u
